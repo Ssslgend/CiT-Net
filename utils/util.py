@@ -8,10 +8,13 @@
 '''
 import os
 import torch
+import torchvision.transforms as transforms
+from PIL import Image
+import numpy as np
 
 IMAGE_EXTENSION = ['.jpg', '.JPG', '.jpeg', '.JPEG',
                    '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP']
-
+path ='/datasets01/archive/train.X1/n01440764'
 
 def isImageFile(fname):
    return any(fname.endswith(extension) for extension in IMAGE_EXTENSION)
@@ -48,6 +51,35 @@ def getMartFromPath(path):
          if isMatFile(fname):
             img_path = os.path.join(root, fname)
             images.append(img_path)
-   assert images, '{:s} has no valid image file'.format(path)
+   # assert images, '{:s} has no valid image file'.format(img_path)
 
    return sorted(images)
+
+def transformImage(images, size=256):
+   # 假设 images 是一个包含多个图像路径的列表
+
+   preprocess = transforms.Compose([
+        transforms.RandomResizedCrop(224, scale=(0.2, 1.0), interpolation=3),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ]
+    )
+   # 预处理所有图像并转换为 (batch, channel, width, height) 格式
+   preprocess_tensor =[]
+   for image_path in images:
+      try:
+         tensor = preprocess(Image.open(image_path))
+         if tensor.shape == (3, 224, 224):
+            preprocess_tensor.append(tensor)
+      except Exception as e:
+         print(f"{image_path} is not a valid image file {e}")
+   # batch_images = torch.stack([preprocess(Image.open(image_path)) for image_path in images])
+   batch_images = torch.stack(preprocess_tensor)
+   # 查看批次图像张量形状
+   print(batch_images.shape)  # 输出: torch.Size([batch_size, 3, 224, 224])
+
+
+if __name__ == '__main__':
+   images = getImageFromPath(path)
+   transformImage(images)

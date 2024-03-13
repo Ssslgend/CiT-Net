@@ -13,7 +13,7 @@ from torch.nn.modules.conv import _ConvNd
 from torch.nn.modules.utils import _pair,_triple
 from torch.nn.parameter import Parameter
 
-device = torch.device("cpu" )
+device = torch.device("cuda" )
 
 class DDConv_3D(nn.Module):
     def __init__(self, inc, outc, kernel_size=3, padding=1, stride=1, bias=None, modulation=False):
@@ -198,8 +198,8 @@ class SConv3D(_ConvNd):
         return torch.cat(res, dim=0)
 if __name__ == "__main__":
     with torch.no_grad():
-        input = torch.rand(2, 16, 112, 112, 80).to("cpu")
-        model = DDConv_3D(16,16).to("cpu")
+        input = torch.rand(2, 16, 112, 112, 80).to("cuda")
+        model = DDConv_3D(16,16).to("cuda")
 
         out_result = model(input)
         print(out_result.shape)

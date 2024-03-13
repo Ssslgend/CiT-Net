@@ -13,7 +13,7 @@ from torch.nn.modules.conv import _ConvNd
 from torch.nn.modules.utils import _pair
 from torch.nn.parameter import Parameter
 
-device = torch.device("cpu" )
+device = torch.device("cuda" )
 
 class DDConv(nn.Module):
     def __init__(self, inc, outc, kernel_size=3, padding=1, stride=1, bias=None, modulation=False):

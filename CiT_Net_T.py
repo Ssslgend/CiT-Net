@@ -1078,8 +1078,8 @@ class CIT(nn.Module):
 
 if __name__ == "__main__":
     with torch.no_grad():
-        input = torch.rand(1, 1, 224, 224).to("cpu")
-        model =CIT().to("cpu")
+        input = torch.rand(1, 1, 224, 224).to("cuda")
+        model =CIT().to("cuda")
 
         out_result, _, _ = model(input)
         print(out_result.shape)

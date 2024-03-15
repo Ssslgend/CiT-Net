@@ -7,19 +7,18 @@ Swin dim    96      192     384     768
      head   3       6       12      24
      num    2       2       6       2
 """
-import torch
 import math
+import utils.util as util
 import torch.nn as nn
 import torch.utils.checkpoint as checkpoint
 from einops import rearrange
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
-from thop import *
-from torch.nn import init
-import torch.nn.functional as F
-from torch.nn import Module, Sequential, Conv2d, ReLU,AdaptiveMaxPool2d, AdaptiveAvgPool2d, \
-    NLLLoss, BCELoss, CrossEntropyLoss, AvgPool2d, MaxPool2d, Parameter, Linear, Sigmoid, Softmax, Dropout, Embedding
-from DDConv import DDConv
 from einops.layers.torch import Rearrange
+from thop import *
+from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from torch.nn import Module, Conv2d, Parameter, Softmax
+from torch.nn import init
+
+from DDConv import DDConv
 
 
 class PatchEmbed(nn.Module):
@@ -1078,13 +1077,21 @@ class CIT(nn.Module):
 
 if __name__ == "__main__":
     with torch.no_grad():
-        input = torch.rand(1, 1, 224, 224).to("cuda")
+        path='F:\output\data'
+        images = util.getImageFromPath(path)
+        input =util.transformImage(images,224)
+
+        input_Gray = util.transformImagetoGray(input)
+        # input = torch.rand(1, 1, 224, 224).to
+        util.TensorToImage(input_Gray,"F:\output\gray")
+        input_Device = input_Gray.to('cuda')
         model =CIT().to("cuda")
 
-        out_result, _, _ = model(input)
+        out_result, _, _ = model(input_Device)
+        util.TensorToImage(out_result, "F:\output\data1")
         print(out_result.shape)
 
-        flops, params = profile(model, (input,))
+        flops, params = profile(model, (input_Device,))
 
         print("-" * 50)
         print('FLOPs = ' + str(flops / 1000 ** 3) + ' G')

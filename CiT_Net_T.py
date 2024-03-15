@@ -7,6 +7,7 @@ Swin dim    96      192     384     768
      head   3       6       12      24
      num    2       2       6       2
 """
+import utils.util as util
 import torch
 import math
 import torch.nn as nn
@@ -1078,14 +1079,28 @@ class CIT(nn.Module):
 
 if __name__ == "__main__":
     with torch.no_grad():
-        input = torch.rand(1, 1, 224, 224).to("cuda")
-        model =CIT().to("cuda")
+        # input = torch.rand(1, 1, 224, 224).to("cuda")
+        # model =CIT().to("cuda")
+        #
+        # out_result, _, _ = model(input)
+        # print(out_result.shape)
+        #
+        # flops, params = profile(model, (input,))
+        path = 'F:\output\data'
+        images = util.getImageFromPath(path)
+        input = util.transformImage(images, 224)
 
-        out_result, _, _ = model(input)
+        input_Gray = util.transformImagetoGray(input)
+        # input = torch.rand(1, 1, 224, 224).to
+        util.TensorToImage(input_Gray, "F:\output\gray")
+        input_Device = input_Gray.to('cuda')
+        model = CIT().to("cuda")
+
+        out_result, _, _ = model(input_Device)
+        util.TensorToImage(out_result, "F:\output\data1")
         print(out_result.shape)
 
-        flops, params = profile(model, (input,))
-
+        flops, params = profile(model, (input_Device,))
         print("-" * 50)
         print('FLOPs = ' + str(flops / 1000 ** 3) + ' G')
         print('Params = ' + str(params / 1000 ** 2) + ' M')

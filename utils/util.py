@@ -76,10 +76,43 @@ def transformImage(images, size=256):
          print(f"{image_path} is not a valid image file {e}")
    # batch_images = torch.stack([preprocess(Image.open(image_path)) for image_path in images])
    batch_images = torch.stack(preprocess_tensor)
+   return batch_images
    # 查看批次图像张量形状
    print(batch_images.shape)  # 输出: torch.Size([batch_size, 3, 224, 224])
 
+def TensorToImage(output_tensor,sava_Path):
 
+   if not os.path.exists(sava_Path):
+      os.makedirs(sava_Path)
+   # 将Tensor转换为图像格式
+   # 这一步骤可能因你的数据预处理方式而异
+   for i    in range(output_tensor.shape[0]):
+      image = output_tensor[i]
+      # image = image.squeeze(0)  # 移除batch维度
+      # image = image.permute(1, 2, 0)  # 将channel维度从第一个变为最后一个
+      image = (image + 1) / 2  # 从[-1, 1]转换为[0, 1]
+      image = image.clamp(0, 1)  # 确保所有值都在[0, 1]范围内
+      image = image.mul(255).round().type(torch.uint8)  # 转换为[0, 255]的uint8格式
+
+      # 将Tensor转换为PIL图像
+      transform = transforms.ToPILImage()
+      output_image = transform(image)
+      print(output_image)
+      # 保存图像
+      output_image.save(os.path.join(sava_Path,f'output_image_{i}.png'))
+
+def transformImagetoGray(tensor):
+   grays= []
+   for i in range(tensor.shape[0]):
+      imagetensor= tensor[i]
+      graytensor = torch.mean(imagetensor, dim=0,keepdim=True)
+      grays.append(graytensor)
+   batch_gray=torch.stack(grays)
+   return batch_gray
 if __name__ == '__main__':
-   images = getImageFromPath(path)
-   transformImage(images)
+   # images = getImageFromPath(path)
+   #
+   # transformImage(images)
+   tensor = torch.randn(1, 3, 224, 224)
+   path='F:/output/data'
+   TensorToImage(tensor,path)

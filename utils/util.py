@@ -10,11 +10,14 @@ import os
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
+from torch.utils.data import DataLoader
 import numpy as np
+from torchvision import datasets
 
 IMAGE_EXTENSION = ['.jpg', '.JPG', '.jpeg', '.JPEG',
                    '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP']
 path ='/datasets01/archive/train.X1/n01440764'
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def isImageFile(fname):
    return any(fname.endswith(extension) for extension in IMAGE_EXTENSION)
@@ -55,22 +58,25 @@ def getMartFromPath(path):
 
    return sorted(images)
 
-def transformImage(images, size=256):
+def transformImage(images):
    # 假设 images 是一个包含多个图像路径的列表
 
    preprocess = transforms.Compose([
-        transforms.RandomResizedCrop(224, scale=(0.2, 1.0), interpolation=3),
+        transforms.Grayscale(num_output_channels=1),
+        transforms.RandomResizedCrop(224, scale=(0.2, 1.0), interpolation=1),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        transforms.Normalize(mean=[0.485], std=[0.229])
     ]
+
     )
    # 预处理所有图像并转换为 (batch, channel, width, height) 格式
    preprocess_tensor =[]
    for image_path in images:
       try:
          tensor = preprocess(Image.open(image_path))
-         if tensor.shape == (3, 224, 224):
+         if tensor.shape == (1, 224, 224):
             preprocess_tensor.append(tensor)
       except Exception as e:
          print(f"{image_path} is not a valid image file {e}")
@@ -78,8 +84,23 @@ def transformImage(images, size=256):
    batch_images = torch.stack(preprocess_tensor)
    return batch_images
    # 查看批次图像张量形状
-   print(batch_images.shape)  # 输出: torch.Size([batch_size, 3, 224, 224])
-
+   # print(batch_images.shape)  # 输出: torch.Size([batch_size, 3, 224, 224])
+def load_list_data(data_Path,batchSize):
+   # 加载数据列表
+   # transform = transforms.Compose([
+   #    transforms.RandomResizedCrop(224, scale=(0.2, 1.0), interpolation=3),
+   #    transforms.RandomHorizontalFlip(),
+   #    transforms.ToTensor(),
+   #    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+   # ]
+   # )
+   trainDataset = getImageFromPath(os.path.join(data_Path,'train/volume'))
+   train_labels = getImageFromPath(os.path.join(data_Path,'train/label'))
+   trainImage = transformImage(trainDataset)
+   train_labels = transformImage(train_labels)
+   trainLoad = DataLoader(trainDataset,batch_size=batchSize, shuffle=True
+                          )
+   return trainImage,train_labels
 def TensorToImage(output_tensor,sava_Path):
 
    if not os.path.exists(sava_Path):
@@ -113,6 +134,13 @@ if __name__ == '__main__':
    # images = getImageFromPath(path)
    #
    # transformImage(images)
-   tensor = torch.randn(1, 3, 224, 224)
-   path='F:/output/data'
-   TensorToImage(tensor,path)
+   # tensor = torch.randn(1, 3, 224, 224)
+   # path='F:/output/data'
+   # TensorToImage(tensor,path)
+   path = 'F:/datasets01/2d'
+   trainload,train_label = load_list_data(path,32,8)
+   print(trainload)
+   for inputg in trainload:
+      print(inputg)
+   # for batch_idx,in enumerate(trainload):
+   #    print(batch_idx,input.shape,label.shape)

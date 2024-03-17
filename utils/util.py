@@ -58,13 +58,14 @@ def getMartFromPath(path):
 
    return sorted(images)
 
-def transformImage(images):
+def transformImage(images,num):
    # 假设 images 是一个包含多个图像路径的列表
 
    preprocess = transforms.Compose([
         transforms.Grayscale(num_output_channels=1),
-        transforms.RandomResizedCrop(224, scale=(0.2, 1.0), interpolation=1),
-        transforms.RandomHorizontalFlip(),
+        # transforms.RandomResizedCrop(224, scale=(0.2, 1.0), interpolation=1),
+        transforms.Resize((224,224),Image.BICUBIC),
+        # transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         transforms.Normalize(mean=[0.485], std=[0.229])
@@ -73,6 +74,7 @@ def transformImage(images):
     )
    # 预处理所有图像并转换为 (batch, channel, width, height) 格式
    preprocess_tensor =[]
+   count =0;
    for image_path in images:
       try:
          tensor = preprocess(Image.open(image_path))
@@ -81,11 +83,15 @@ def transformImage(images):
       except Exception as e:
          print(f"{image_path} is not a valid image file {e}")
    # batch_images = torch.stack([preprocess(Image.open(image_path)) for image_path in images])
+      if count>=num:
+         break
+      else:
+         count+=1
    batch_images = torch.stack(preprocess_tensor)
    return batch_images
    # 查看批次图像张量形状
    # print(batch_images.shape)  # 输出: torch.Size([batch_size, 3, 224, 224])
-def load_list_data(data_Path,batchSize):
+def load_list_data(data_Path,batchSize,num):
    # 加载数据列表
    # transform = transforms.Compose([
    #    transforms.RandomResizedCrop(224, scale=(0.2, 1.0), interpolation=3),
@@ -96,8 +102,8 @@ def load_list_data(data_Path,batchSize):
    # )
    trainDataset = getImageFromPath(os.path.join(data_Path,'train/volume'))
    train_labels = getImageFromPath(os.path.join(data_Path,'train/label'))
-   trainImage = transformImage(trainDataset)
-   train_labels = transformImage(train_labels)
+   trainImage = transformImage(trainDataset,num)
+   train_labels = transformImage(train_labels,num)
    trainLoad = DataLoader(trainDataset,batch_size=batchSize, shuffle=True
                           )
    return trainImage,train_labels
@@ -118,7 +124,7 @@ def TensorToImage(output_tensor,sava_Path):
       # 将Tensor转换为PIL图像
       transform = transforms.ToPILImage()
       output_image = transform(image)
-      print(output_image)
+      # print(output_image)
       # 保存图像
       output_image.save(os.path.join(sava_Path,f'output_image_{i}.png'))
 
